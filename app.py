@@ -46,6 +46,7 @@ def connect(ws):
             id = data['id']
             target = data['target']
             addr = request.environ.get('REMOTE_ADDR') + ':' + request.environ.get('REMOTE_PORT')
+            print("Address: " + addr)
             if not (target, id) in conns: # initial
                 conns[(id, target)] = addr
                 if target in clients:
