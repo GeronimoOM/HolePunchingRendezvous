@@ -27,7 +27,7 @@ def update(ws):
                 clients[data['id']] = ws
                 print('Register :' + str(clients))
             else:  # connect
-                target = data['id']
+                target = data['target']
                 if (target, id) in conns:
                     clients[target].send(dumps({'id': id, 'addr': conns[(target, id)]}))
                     del conns[(id, target)]
@@ -42,6 +42,7 @@ def connect(ws):
         message = ws.receive()
         if message and message != 'ping':
             data = loads(message)
+            print('Connect: ' + message)
             id = data['id']
             target = data['id']
             addr = request.environ.get('REMOTE_ADDR') + ':' + request.environ.get('REMOTE_PORT')
@@ -54,6 +55,7 @@ def connect(ws):
                     return 'Contact offline: ' + target
             else:  # response
                 conns[(target, id)] = addr
+            print('Connections: ' + str(conns))
 
 '''
 if __name__ == '__main__':
