@@ -17,21 +17,21 @@ def homepage():
 
 @sockets.route('/update')
 def update(ws):
+    id = None
     while not ws.closed:
-        a = None
         message = ws.receive()
         if message and message != 'ping':
             data = loads(message)
-            if not a:  # register client
-                a = data['id']
-                clients[a] = ws
+            if not id:  # register client
+                id = data['id']
+                clients[data['id']] = ws
                 print('Register :' + str(clients))
             else:  # connect
-                b = data['target']
-                if (b, a) in conns:
-                    clients[b].send(dumps({'id': a, 'addr': conns[(b, a)]}))
-                    del conns[(b, a)]
-                    print('Connection :' + a + ' - ' + b)
+                target = data['target']
+                if (target, id) in conns:
+                    clients[target].send(dumps({'id': id, 'addr': conns[(target, id)]}))
+                    del conns[(id, target)]
+                    print('Connection :' + target + ' - ' + id)
                 else:
                     return 'Must call /connect first'
 
