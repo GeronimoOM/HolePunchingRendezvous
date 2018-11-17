@@ -45,11 +45,14 @@ def connect(ws):
             print('Connect: ' + message)
             id = data['id']
             target = data['target']
+            '''
             if request.headers.getlist("X-Forwarded-For"):
                 host = request.headers.getlist("X-Forwarded-For")[0]
             else:
                 host = request.environ.get('REMOTE_ADDR')
             addr = host + ':' + request.environ.get('REMOTE_PORT')
+            '''
+            addr = data['addr']
             print("Address: " + addr)
             if not (target, id) in conns: # initial
                 conns[(id, target)] = addr
