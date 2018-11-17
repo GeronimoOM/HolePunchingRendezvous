@@ -25,13 +25,17 @@ def update(ws):
             if not id:  # register client
                 id = data['id']
                 clients[data['id']] = ws
-                print('Register :' + str(clients))
+                print('Register: ' + id)
             else:  # connect
                 target = data['target']
                 if (target, id) in conns:
-                    clients[target].send(dumps({'id': id, 'addr': conns[(target, id)]}))
-                    del conns[(id, target)]
-                    print('Connection :' + target + ' - ' + id)
+                    if target in clients and not clients[target].closed:
+                        conn = conns[(target, id)]
+                        clients[target].send(dumps({'id': id, 'public': conn[0], 'private': conn[1]}))
+                        del conns[(id, target)]
+                        print('Connection :' + target + ' - ' + id)
+                    else:
+                        return 'Contact offline: ' + target
                 else:
                     return 'Must call /connect first'
 
@@ -45,23 +49,24 @@ def connect(ws):
             print('Connect: ' + message)
             id = data['id']
             target = data['target']
-            print(request.headers)
-            if request.headers.getlist("X-Forwarded-For"):
-                host = request.headers.getlist("X-Forwarded-For")[0]
-            else:
-                host = request.environ.get('REMOTE_ADDR')
-            addr = host + ':' + request.environ.get('REMOTE_PORT')
-            print("Address: " + addr)
+            private = data['private']
+            public = get_addr(request)
+            print("Address: " + public + ', ' + private)
             if not (target, id) in conns: # initial
-                conns[(id, target)] = addr
-                if target in clients:
-                    clients[target].send(dumps({'id': id, 'addr': addr}))
+                conns[(id, target)] = (public, private)
+                if target in clients and not clients[target].closed:
+                    clients[target].send(dumps({'id': id, 'public': public, 'private': private}))
                     print('Connection: ' + target + ' - ' + id)
                 else:
                     return 'Contact offline: ' + target
             else:  # response
-                conns[(target, id)] = addr
+                conns[(target, id)] = (public, private)
             print('Connections: ' + str(conns))
+
+
+def get_addr(r):
+    return r.environ.get('REMOTE_ADDR') + ':' + r.environ.get('REMOTE_PORT')
+
 
 '''
 if __name__ == '__main__':
